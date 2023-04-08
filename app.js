@@ -6,7 +6,7 @@ const Todo = require("./schema");
 const { default: mongoose } = require("mongoose");
 
 const app = express();
-const pool = new Pool(config.database);
+// const pool = new Pool(config.database);
 
 app.engine(".hbs", exphbs.engine({ extname: ".hbs" }));
 app.set("view engine", ".hbs");
@@ -28,7 +28,7 @@ mongoose
   });
 // Routes
 app.get("/", async (req, res) => {
-  const todos = await Todo.find().sort({ id: 1 });
+  const todos = await Todo.find();
   res.render("index", { todos, layout: false });
 });
 
@@ -36,9 +36,8 @@ app.post("/add", async (req, res) => {
   const task = req.body.task;
 
   if (task) {
-    const todoItem = new Todo(task);
+    const todoItem = new Todo({ todo: task });
     await todoItem.save();
-    res.json(todoItem);
   }
 
   res.redirect("/");
@@ -54,41 +53,40 @@ app.post("/complete/:id", async (req, res) => {
         completed: true,
       }
     );
-    res.json(updateItem);
   }
 
   res.redirect("/");
 });
 
-app.get("/edit/:id", async (req, res) => {
-  const id = req.params.id;
+// app.get("/edit/:id", async (req, res) => {
+//   const id = req.params.id;
 
-  if (id) {
-    const client = await pool.connect();
-    const result = await client.query("SELECT * FROM todos WHERE id = $1", [
-      id,
-    ]);
-    const todo = result.rows[0];
-    client.release();
+//   if (id) {
+//     const client = await pool.connect();
+//     const result = await client.query("SELECT * FROM todos WHERE id = $1", [
+//       id,
+//     ]);
+//     const todo = result.rows[0];
+//     client.release();
 
-    res.render("edit", { todo, layout: false });
-  } else {
-    res.redirect("/");
-  }
-});
+//     res.render("edit", { todo, layout: false });
+//   } else {
+//     res.redirect("/");
+//   }
+// });
 
-app.post("/update/:id", async (req, res) => {
-  const id = req.params.id;
-  const task = req.body.task;
+// app.post("/update/:id", async (req, res) => {
+//   const id = req.params.id;
+//   const task = req.body.task;
 
-  if (id && task) {
-    const client = await pool.connect();
-    await client.query("UPDATE todos SET task = $1 WHERE id = $2", [task, id]);
-    client.release();
-  }
+//   if (id && task) {
+//     const client = await pool.connect();
+//     await client.query("UPDATE todos SET task = $1 WHERE id = $2", [task, id]);
+//     client.release();
+//   }
 
-  res.redirect("/");
-});
+//   res.redirect("/");
+// });
 
 // Add this route after the existing routes
 app.post("/delete/:id", async (req, res) => {
